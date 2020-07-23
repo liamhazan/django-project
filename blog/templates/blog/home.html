@@ -1,0 +1,237 @@
+{% extends 'blog/base.html' %}
+{% block content %}
+    <style>
+div.sticky {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  background-color: #fbf8ff;
+  padding: 30px;
+  font-size: 17px;
+}
+
+table.scroll{
+    width: 716px; /* 140px * 5 column + 16px scrollbar width */
+    border-spacing: 0;
+}
+
+tbody.scroll, thead tr.scroll { display: block; }
+
+tbody.scroll {
+    height: 100px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+tbody td.scroll, thead th.scroll {
+    width: 140px;
+}
+
+thead th.scroll:last-child {
+    width: 156px; /* 140px + 16px scrollbar width */
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 80%;
+  border: 1px solid #ddd;
+}
+
+th, td {
+  text-align: left;
+  padding: 16px;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2
+}
+</style>
+
+    <div>
+    <table  style="width:12%" align="right">
+        <tr>
+        <th>Personal Keywords</th>
+    </tr>
+        <tr>
+        <th id="keywords_list"></th>
+    </tr>
+
+
+{#    the table of the chosen ones#}
+    </table>
+
+    <table style="width:80%; background: #f2f2f2" align="left">
+    <tr>
+        <th><details>
+         <summary>Yes</summary>
+        <p id="yes_list"></p>
+        </details>  </th>
+        <th><details>
+         <summary>Maybe</summary>
+        <p id="maybe_list"></p>
+        </details> </th>
+        <th>Bidding requirement</th>
+    </tr>
+    <tr>
+        <th id = 'yes_num'> 0</th>
+        <th id = 'maybe_num'> 0 </th>
+        <th>{{ user.profile.budget }}</th>
+    </tr>
+    <tr>
+        <th id = 'yes-counter'> 0</th>
+        <th id = 'maybe-counter'> 0 </th>
+        <th id="total-counter">0/{{ user.profile.budget }}</th>
+    </tr>
+    </table>
+        </div>
+
+
+{#<link rel="stylesheet" href="/django_project/blog/templates/blog/scroll.css">#}
+
+<div align="left" style="width:85%;height:800px; overflow:auto;">
+<form method="POST">
+     {% csrf_token %}
+
+    <table >
+         <tr>
+            <th> <input type="submit" name="_Save" value="Save"></th>
+        </tr>
+    </table>
+
+    <table cellspacing="0" cellpadding="1" border="1" width="400px" id="main-table">
+    <tr>
+        <th width="40px">_Choice_</th>
+        <th>Paper ID<input type="submit" name="_Save" value="sort"></th>
+        <th>Bidding points <input type="submit" name="_sort-points" value="sort"></th>
+        <th>Title</th>
+        <th width="20%">Abstract</th>
+        <th>Keywords</th>
+    </tr>
+
+{% for essay in list %}
+    <tr>
+    <td width="200">
+        <fieldset>
+            <input type="radio" name="decision {{ essay.id }}" id="yes {{ essay.id }}" value="yes" onchange="yes_action({{ essay.id }})"> yes <br>
+            <input type="radio" name="decision {{ essay.id }}" id="maybe {{ essay.id }}" value="maybe" onchange="maybe_action({{ essay.id }})"> maybe
+            <input type="radio" name="decision {{ essay.id }}" id="no {{ essay.id }}" value="no" onchange="no_action({{ essay.id }})" CHECKED> no
+        </fieldset>
+    </td>
+    <td width="8">#{{ essay.id }}</td>
+    <td width="8" id="price {{ essay.id }}"> </td>
+    <td width="350">{{essay.name}}</td>
+    <td width="1400"><details>
+  <summary>Show abstract</summary>
+  <p><b>abstract:</b> {{essay.abstract}}</p>
+</details></td>
+    <td width="200"> {% for keyword in essay.keywords %}
+        {{ keyword }},
+        {% endfor %}</td>
+  </tr>
+{% endfor %}
+  </table>
+         <textarea hidden id="log" name="log" rows="100" cols="40" > {{ user }}
+time, value, essay_id
+</textarea>
+</form>
+</div>
+
+
+
+
+
+
+
+    <script>
+    window.onload = function WindowLoad(event) {
+        document.getElementById('keywords_list').innerHTML = "{{ user.profile.keywords }}".replace(/,/gi,"<br>");
+        prices = "{{ user.profile.prices }}".split(",");
+        for (i = 0; i < prices.length; i++) {
+            document.getElementById('price ' + i).innerHTML = (prices[i]+ 'p')
+        }
+        init_state = "{{ user.profile.state }}" ;
+        for (var x = 0; x < init_state.length; x++) {
+            var c = init_state.charAt(x);
+
+            if(c=='1'){
+                document.getElementById('maybe ' + x).click();
+            }
+            if (c=='2'){
+                document.getElementById('yes ' + x).click();
+            }
+
+        }
+    };
+
+    var yes_list = [];
+    var maybe_list = [];
+    var index = 0;
+    function update_sums() {
+        var sum = 0;
+        for(var i = 0 ; i<yes_list.length; i++) {
+            sum += parseInt((prices[yes_list[i]]));
+        }
+        document.getElementById('yes-counter').innerHTML = ("yes bidding points: " + sum + 'p');
+        sum2 = 0;
+        for(i = 0 ; i<maybe_list.length; i++) {
+            sum2 += parseInt((prices[maybe_list[i]]));
+        }
+        document.getElementById('maybe-counter').innerHTML = ("maybe bidding points: " + sum2 + 'p');
+        total = sum + sum2;
+        document.getElementById('total-counter').innerHTML = ('Total points: '+ total + '/{{ user.profile.budget }}' )
+        text_yes = '';
+        text_maybe = '';
+        for( i=0; i<yes_list.length;i++){
+            text_yes = (text_yes + '#' + yes_list[i] + '      (' + prices[yes_list[i]]+'p) <br>')
+        }
+        for( i=0; i<maybe_list.length;i++){
+            text_maybe = (text_maybe + '#' + maybe_list[i] + '      (' + prices[maybe_list[i]]+'p) <br>')
+        }
+        document.getElementById('maybe_list').innerHTML = text_maybe;
+        document.getElementById('yes_list').innerHTML = text_yes;
+        document.getElementById('yes_num').innerHTML = ('yes bids: ' + yes_list.length);
+        document.getElementById('maybe_num').innerHTML = ('maybe bids: ' + maybe_list.length);
+
+    }
+    function yes_action(id) {
+        yes_list.push(id);
+        index = maybe_list.indexOf(id);
+        if (index > -1) {
+            maybe_list.splice(index, 1);
+        }
+        var d = new Date();
+        var n = d.getTime();
+        document.getElementById('log').value += n + ", 1, " + id + " \\\n";
+        update_sums();
+    }
+
+    function no_action(id) {
+        index = maybe_list.indexOf(id);
+        if (index > -1) {
+        maybe_list.splice(index, 1);
+        }
+        index = yes_list.indexOf(id);
+        if (index > -1) {
+            yes_list.splice(index, 1);
+        }
+        var d = new Date();
+        var n = d.getTime();
+        document.getElementById('log').value += n + ", 0," + id + " \\\n";
+        update_sums();
+    }
+
+    function maybe_action(id) {
+        maybe_list.push(id);
+        index = yes_list.indexOf(id);
+        if (index > -1) {
+            yes_list.splice(index, 1);
+        }
+        var d = new Date();
+        var n = d.getTime();
+        document.getElementById('log').value += n + ", 0," + id + " \\\n";
+        update_sums();
+    }
+
+</script>
+{% endblock content %}

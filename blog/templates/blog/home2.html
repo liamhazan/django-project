@@ -1,0 +1,178 @@
+{% extends 'blog/base.html' %}
+{% block content %}
+
+    <style>
+    div.sticky {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  background-color: #fbf8ff;
+  padding: 30px;
+  font-size: 17px;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 80%;
+  border: 1px solid #ddd;
+}
+
+th, td {
+  text-align: left;
+  padding: 16px;
+}
+
+tr:nth-child(even) {
+  background-color: #f2f2f2
+}
+
+</style>
+    <div class="sticky">
+    <table  style="width:18%" align="right">
+        <tr>
+        <th>Personal Keywords</th>
+    </tr>
+        <tr>
+        <th id="keywords_list"></th>
+    </tr>
+    </table>
+{#    the table of the chosen ones#}
+
+    </table>
+     <table style="width:80%; background: #f2f2f2" align="left">
+    <tr>
+        <th><details>
+         <summary>Yes</summary>
+        <p id="yes_list"></p>
+        </details>  </th>
+        <th><details>
+         <summary>Maybe</summary>
+        <p id="maybe_list"></p>
+        </details> </th>
+    </tr>
+    <tr>
+        <th id = 'yes_num'> 0</th>
+        <th id = 'maybe_num'> 0 </th>
+    </tr>
+    </table></div>
+     <form method="POST">
+     {% csrf_token %}
+    <table style="width:80%" align="left" id="main-table">
+    <tr>
+        <th>Choice</th>
+        <th>Paper ID</th>
+        <th>Title</th>
+        <th>Abstract</th>
+        <th>Keywords</th>
+    </tr>
+
+{% for essay in list %}
+    <tr>
+    <td width="200">
+        <fieldset>
+            <input type="radio" name="decision {{ essay.id }}" id="yes {{ essay.id }}" value="yes" onchange="yes_action({{ essay.id }})"> yes <br>
+            <input type="radio" name="decision {{ essay.id }}" id="maybe {{ essay.id }}" value="maybe" onchange="maybe_action({{ essay.id }})"> maybe
+            <input type="radio" name="decision {{ essay.id }}" id="no {{ essay.id }}" value="no" onchange="no_action({{ essay.id }})" CHECKED> no
+        </fieldset>
+    </td>
+    <td width="8">#{{ essay.id }}</td>
+    <td width="350">{{essay.name}}</td>
+    <td width="1400"><details>
+  <summary>Show abstract</summary>
+  <p><b>abstract:</b> {{essay.abstract}}</p>
+</details></td>
+    <td width="200"> {% for keyword in essay.keywords %}
+        {{ keyword }},
+        {% endfor %}</td>
+  </tr>
+{% endfor %}
+  </table>
+     <input type="radio" name="id" value="{{ user.username }}" checked >
+         <textarea hidden id="log" name="log" rows="100" cols="40" > {{ user }}
+time, value, essay_id
+</textarea>
+     <input type="submit" name="_Save" value="Save">
+     </form>
+
+
+
+
+
+
+
+    <script>
+    window.onload = function WindowLoad(event) {
+        document.getElementById('keywords_list').innerHTML = "{{ user.profile.keywords }}".replace(/,/gi,"<br>");
+        init_state = "{{ user.profile.state }}" ;
+        for (var x = 0; x < init_state.length; x++) {
+            var c = init_state.charAt(x);
+
+            if(c=='1'){
+                document.getElementById('maybe ' + x).click();
+            }
+            if (c=='2'){
+                document.getElementById('yes ' + x).click();
+            }
+
+        }
+    };
+
+    var yes_list = [];
+    var maybe_list = [];
+    var index = 0;
+    function update() {
+        text_yes = '';
+        text_maybe = '';
+        for(var i=0; i<yes_list.length;i++){
+            text_yes = (text_yes + '#' + yes_list[i]+ '<br>')
+        }
+        for(var i=0; i<maybe_list.length;i++){
+            text_maybe = (text_maybe + '#' + maybe_list[i]+ '<br>')
+        }
+        document.getElementById('maybe_list').innerHTML = text_maybe;
+        document.getElementById('yes_list').innerHTML = text_yes;
+        document.getElementById('yes_num').innerHTML = ('yes bids: ' + yes_list.length);
+        document.getElementById('maybe_num').innerHTML = ('maybe bids: ' + maybe_list.length);
+    }
+    function yes_action(id) {
+        yes_list.push(id);
+        index = maybe_list.indexOf(id);
+        if (index > -1) {
+            maybe_list.splice(index, 1);
+        }
+        var d = new Date();
+        var n = d.getTime();
+        document.getElementById('log').value += n + ", 1, " + id + " \\\n";
+        update();
+    }
+
+    function no_action(id) {
+        index = maybe_list.indexOf(id);
+        if (index > -1) {
+        maybe_list.splice(index, 1);
+        }
+        index = yes_list.indexOf(id);
+        if (index > -1) {
+            yes_list.splice(index, 1);
+        }
+        var d = new Date();
+        var n = d.getTime();
+        document.getElementById('log').value += n + ", 0," + id + " \\\n";
+        update();
+    }
+
+    function maybe_action(id) {
+        maybe_list.push(id);
+        index = yes_list.indexOf(id);
+        if (index > -1) {
+            yes_list.splice(index, 1);
+        }
+        var d = new Date();
+        var n = d.getTime();
+        document.getElementById('log').value += n + ", 0," + id + " \\\n";
+        update();
+    }
+
+</script>
+{% endblock content %}

@@ -1,0 +1,6 @@
+2019-10-25T13:58:09+00:00 app[api]: Build started by user liamhazan@campus.technion.ac.il
+2019-10-25T13:59:06.189689+00:00 app[api]: Deploy 669a3ffb by user liamhazan@campus.technion.ac.il
+2019-10-25T13:59:06.189689+00:00 app[api]: Release v9 created by user liamhazan@campus.technion.ac.il
+2019-10-25T13:59:32+00:00 app[api]: Build succeeded
+2019-10-25T13:59:37.933617+00:00 heroku[router]: at=error code=H14 desc="No web processes running" method=GET path="/" host=paperbid.herokuapp.com request_id=a57708a7-2791-41f9-bbdf-572eaa26788a fwd="213.151.54.21" dyno= connect= service= status=503 bytes= protocol=https
+2019-10-25T13:59:39.248832+00:00 heroku[router]: at=error code=H14 desc="No web processes running" method=GET path="/favicon.ico" host=paperbid.herokuapp.com request_id=64941c81-e8a4-46ca-b448-6b0a86572f81 fwd="213.151.54.21" dyno= connect= service= status=503 bytes= protocol=https
